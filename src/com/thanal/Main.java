@@ -6,72 +6,93 @@ import java.awt.event.*;
 
 public class Main extends JFrame implements ActionListener {
 
-    private JButton userPortalBtn, adminPanelBtn, reportIncidentBtn, volunteerSectionBtn, firstAidBtn, exitBtn;
+    private JButton userPortalBtn, adminPanelBtn, reportIncidentBtn, volunteerSectionBtn,
+            firstAidBtn, contactsBtn, checklistBtn, exitBtn;
 
     public Main() {
         setTitle("Thanal - Home Page");
-        setLayout(null);
-        setSize(500, 400);
+        setSize(1000, 700);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        getContentPane().setBackground(new Color(220, 255, 220)); // light green
+        setLocationRelativeTo(null);
+        setLayout(null);
+
+        getContentPane().setBackground(Color.WHITE);
 
         JLabel title = new JLabel("Welcome to Thanal App", SwingConstants.CENTER);
-        title.setFont(new Font("Segoe UI", Font.BOLD, 20));
-        title.setBounds(100, 30, 300, 40);
+        title.setFont(new Font("Segoe UI", Font.BOLD, 32));
+        title.setForeground(new Color(0, 128, 0));
+        title.setBounds(0, 40, 1000, 60);
         add(title);
 
-        userPortalBtn = new JButton("👤 User Portal");
-        userPortalBtn.setBounds(150, 90, 200, 30);
-        userPortalBtn.addActionListener(this);
+        Color buttonColor = new Color(230, 255, 230);
+        Color hoverColor = new Color(200, 245, 200);
 
-        adminPanelBtn = new JButton("🧑‍💼 Admin Panel");
-        adminPanelBtn.setBounds(150, 130, 200, 30);
-        adminPanelBtn.addActionListener(this);
-
-        reportIncidentBtn = new JButton("💬 Report Incident");
-        reportIncidentBtn.setBounds(150, 170, 200, 30);
-        reportIncidentBtn.addActionListener(this);
-
-        volunteerSectionBtn = new JButton("🧾 Volunteer Section");
-        volunteerSectionBtn.setBounds(150, 210, 200, 30);
-        volunteerSectionBtn.addActionListener(this);
-
-        firstAidBtn = new JButton("📖 First Aid Guide");
-        firstAidBtn.setBounds(150, 250, 200, 30);
-        firstAidBtn.addActionListener(this);
-
-        exitBtn = new JButton("🚪 Exit");
-        exitBtn.setBounds(150, 290, 200, 30);
-        exitBtn.addActionListener(this);
+        userPortalBtn = createButton("User Portal", 120, 150, 300, 70, buttonColor, hoverColor);
+        adminPanelBtn = createButton("Admin Panel", 580, 150, 300, 70, buttonColor, hoverColor);
+        reportIncidentBtn = createButton("Report Incident", 120, 250, 300, 70, buttonColor, hoverColor);
+        volunteerSectionBtn = createButton("Volunteer Section", 580, 250, 300, 70, buttonColor, hoverColor);
+        firstAidBtn = createButton("First Aid Guide", 120, 350, 300, 70, buttonColor, hoverColor);
+        contactsBtn = createButton("Emergency Contacts", 580, 350, 300, 70, buttonColor, hoverColor);
+        checklistBtn = createButton("Checklist", 120, 450, 300, 70, buttonColor, hoverColor);
+        exitBtn = createButton("Exit", 580, 450, 300, 70, new Color(255, 230, 230), new Color(255, 200, 200));
 
         add(userPortalBtn);
         add(adminPanelBtn);
         add(reportIncidentBtn);
         add(volunteerSectionBtn);
         add(firstAidBtn);
+        add(contactsBtn);
+        add(checklistBtn);
         add(exitBtn);
 
-        setLocationRelativeTo(null);
+        JLabel footer = new JLabel("Thanal © 2025 | Connecting Safety and Care", SwingConstants.CENTER);
+        footer.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        footer.setForeground(new Color(34, 139, 34));
+        footer.setBounds(0, 620, 1000, 30);
+        add(footer);
+
         setVisible(true);
+    }
+
+    private JButton createButton(String text, int x, int y, int width, int height, Color bgColor, Color hoverColor) {
+        JButton btn = new JButton(text);
+        btn.setBounds(x, y, width, height);
+        btn.setFont(new Font("Segoe UI", Font.BOLD, 18));
+        btn.setBackground(bgColor);
+        btn.setForeground(Color.BLACK);
+        btn.setFocusPainted(false);
+        btn.setBorder(BorderFactory.createLineBorder(new Color(144, 238, 144), 2, true));
+
+        btn.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                btn.setBackground(hoverColor);
+            }
+
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                btn.setBackground(bgColor);
+            }
+        });
+
+        btn.addActionListener(this);
+        return btn;
     }
 
     @Override
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == userPortalBtn) {
-            JOptionPane.showMessageDialog(this, "Opening User Portal...");
-            User.main(new String[] {}); // Open User UI
+            User.main(new String[] {});
         } else if (e.getSource() == adminPanelBtn) {
-            JOptionPane.showMessageDialog(this, "Opening Admin Panel...");
-            Admin.main(new String[] {}); // Open Admin UI
+            Admin.main(new String[] {});
         } else if (e.getSource() == reportIncidentBtn) {
-            JOptionPane.showMessageDialog(this, "Opening Report Incident Page...");
-            Report.main(new String[] {}); // (You'll create ReportUI.java)
+            Report.main(new String[] {});
         } else if (e.getSource() == volunteerSectionBtn) {
-            JOptionPane.showMessageDialog(this, "Opening Volunteer Section...");
-            Volunteer.main(new String[] {}); // (You'll create VolunteerUI.java)
+            Volunteer.main(new String[] {});
         } else if (e.getSource() == firstAidBtn) {
-            JOptionPane.showMessageDialog(this, "Opening First Aid Guide...");
-            FirstAidGuide.main(new String[] {}); // (You'll create FirstAidUI.java)
+            FirstAidGuide.main(new String[] {});
+        } else if (e.getSource() == contactsBtn) {
+            EmergencyContacts.main(new String[] {});
+        } else if (e.getSource() == checklistBtn) {
+            Checklist.main(new String[] {});
         } else if (e.getSource() == exitBtn) {
             int confirm = JOptionPane.showConfirmDialog(this, "Exit Thanal App?", "Confirm Exit",
                     JOptionPane.YES_NO_OPTION);

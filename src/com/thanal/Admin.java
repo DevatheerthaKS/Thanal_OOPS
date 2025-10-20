@@ -1,9 +1,10 @@
 package com.thanal;
 
+import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
+import javax.swing.table.*;
 import java.sql.*;
-import javax.swing.table.DefaultTableModel;
 
 public class Admin implements ActionListener {
 
@@ -13,11 +14,6 @@ public class Admin implements ActionListener {
     private static JLabel messageLabel;
 
     private static JTable volunteerTable, incidentTable;
-    private static JTextField sectionField;
-    private static JTextArea contentArea;
-    private static JButton updateB3;
-
-    // Database connection
     private Connection conn;
 
     public Admin() {
@@ -28,7 +24,7 @@ public class Admin implements ActionListener {
         }
     }
 
-    // ------------------ LOGIN ------------------
+    // Login Dashboard
     public boolean loginAdmin(String email, String password) {
         try {
             String sql = "SELECT * FROM admins WHERE email = ? AND password = ?";
@@ -37,76 +33,69 @@ public class Admin implements ActionListener {
             stmt.setString(2, password);
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
-                messageLabel.setText("✅ Login successful! Welcome, " + rs.getString("name"));
+                messageLabel.setText(" Login successful! Welcome, " + rs.getString("name"));
                 openDashboard();
                 return true;
             } else {
-                messageLabel.setText("❌ Invalid email or password!");
+                messageLabel.setText("Invalid email or password!");
                 return false;
             }
         } catch (SQLException e) {
-            messageLabel.setText("❌ DB Error: " + e.getMessage());
+            messageLabel.setText(" DB Error: " + e.getMessage());
             return false;
         }
     }
 
-    // ------------------ ADMIN DASHBOARD ------------------
+    // ADMIN DASHBOARD
     private void openDashboard() {
         frame.getContentPane().removeAll();
         frame.repaint();
-        frame.setSize(600, 600);
 
-        JLabel titleLabel = new JLabel("Admin Dashboard");
-        titleLabel.setBounds(200, 10, 200, 30);
+        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+        frame.setSize((int) screenSize.getWidth(), (int) screenSize.getHeight());
+        frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
+        frame.getContentPane().setBackground(new Color(240, 250, 255));
+        frame.setLayout(null);
+
+        JLabel titleLabel = new JLabel(" Thanal Admin Dashboard", SwingConstants.CENTER);
+        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 32));
+        titleLabel.setForeground(new Color(0, 70, 120));
+        titleLabel.setBounds((int) (screenSize.getWidth() / 2 - 300), 20, 600, 50);
         frame.add(titleLabel);
 
-        // Volunteers Table
-        JLabel volLabel = new JLabel("Registered Volunteers:");
-        volLabel.setBounds(50, 50, 200, 25);
-        frame.add(volLabel);
+        // Volunteer Panel
+        JPanel volunteerPanel = new JPanel();
+        volunteerPanel.setLayout(null);
+        volunteerPanel.setBackground(new Color(220, 255, 230));
+        volunteerPanel.setBounds(200, 100, (int) screenSize.getWidth() - 400, 350);
+        volunteerPanel.setBorder(BorderFactory.createTitledBorder(
+                BorderFactory.createLineBorder(Color.GRAY),
+                " Registered Volunteers",
+                0, 0,
+                new Font("Segoe UI", Font.BOLD, 18)));
+        frame.add(volunteerPanel);
 
         volunteerTable = new JTable();
         JScrollPane volScroll = new JScrollPane(volunteerTable);
-        volScroll.setBounds(50, 80, 500, 100);
-        frame.add(volScroll);
+        volScroll.setBounds(20, 40, volunteerPanel.getWidth() - 40, 270);
+        volunteerPanel.add(volScroll);
 
-        // Incidents Table
-        JLabel incLabel = new JLabel("Reported Incidents:");
-        incLabel.setBounds(50, 200, 200, 25);
-        frame.add(incLabel);
+        // Incident Panel
+        JPanel incidentPanel = new JPanel();
+        incidentPanel.setLayout(null);
+        incidentPanel.setBackground(new Color(255, 240, 240));
+        incidentPanel.setBounds(200, 480, (int) screenSize.getWidth() - 400, 350);
+        incidentPanel.setBorder(BorderFactory.createTitledBorder(
+                BorderFactory.createLineBorder(Color.GRAY),
+                " Reported Incidents",
+                0, 0,
+                new Font("Segoe UI", Font.BOLD, 18)));
+        frame.add(incidentPanel);
 
         incidentTable = new JTable();
         JScrollPane incScroll = new JScrollPane(incidentTable);
-        incScroll.setBounds(50, 230, 500, 100);
-        frame.add(incScroll);
-
-        // First Aid update
-        JLabel sectionLabel = new JLabel("Section:");
-        sectionLabel.setBounds(50, 350, 100, 25);
-        frame.add(sectionLabel);
-
-        sectionField = new JTextField();
-        sectionField.setBounds(150, 350, 150, 25);
-        frame.add(sectionField);
-
-        JLabel contentLabel = new JLabel("Content:");
-        contentLabel.setBounds(50, 390, 100, 25);
-        frame.add(contentLabel);
-
-        contentArea = new JTextArea();
-        contentArea.setLineWrap(true);
-        JScrollPane scrollPane = new JScrollPane(contentArea);
-        scrollPane.setBounds(150, 390, 300, 100);
-        frame.add(scrollPane);
-
-        updateB3 = new JButton("Update First Aid");
-        updateB3.setBounds(150, 510, 150, 30);
-        updateB3.addActionListener(this);
-        frame.add(updateB3);
-
-        messageLabel = new JLabel("");
-        messageLabel.setBounds(50, 550, 500, 30);
-        frame.add(messageLabel);
+        incScroll.setBounds(20, 40, incidentPanel.getWidth() - 40, 270);
+        incidentPanel.add(incScroll);
 
         loadVolunteers();
         loadIncidents();
@@ -115,16 +104,14 @@ public class Admin implements ActionListener {
         frame.repaint();
     }
 
-    // Load volunteers dynamically
     private void loadVolunteers() {
         try {
-            // Select all volunteers, including approval status
             String sql = "SELECT volunteerId, name, address, phone, expertise, approved FROM volunteers";
             PreparedStatement stmt = conn.prepareStatement(sql);
             ResultSet rs = stmt.executeQuery();
 
             DefaultTableModel model = new DefaultTableModel(
-                    new String[] { "ID", "Name", "Address", "Phone", "Expertise", "Approved", "Action" }, 0);
+                    new String[] { "ID", "Name", "Address", "Phone", "Expertise", "Status", "Action" }, 0);
 
             while (rs.next()) {
                 int volunteerId = rs.getInt("volunteerId");
@@ -133,32 +120,52 @@ public class Admin implements ActionListener {
                 String phone = rs.getString("phone");
                 String expertise = rs.getString("expertise");
                 boolean approved = rs.getBoolean("approved");
+                String status = approved ? " Approved" : " Pending";
 
-                model.addRow(new Object[] { volunteerId, name, address, phone, expertise, approved ? "Yes" : "No",
-                        "Approve" });
+                model.addRow(new Object[] { volunteerId, name, address, phone, expertise, status,
+                        approved ? "—" : "Approve" });
             }
 
             volunteerTable.setModel(model);
+            volunteerTable.setRowHeight(30);
+            volunteerTable.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+            volunteerTable.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 16));
+            volunteerTable.getTableHeader().setBackground(new Color(150, 200, 255));
 
-            // Add mouse listener for clicking "Approve"
-            volunteerTable.addMouseListener(new java.awt.event.MouseAdapter() {
-                public void mouseClicked(java.awt.event.MouseEvent evt) {
+            volunteerTable.addMouseListener(new MouseAdapter() {
+                public void mouseClicked(MouseEvent evt) {
                     int row = volunteerTable.rowAtPoint(evt.getPoint());
                     int col = volunteerTable.columnAtPoint(evt.getPoint());
-
-                    if (col == 6) { // "Action" column
-                        int volunteerId = (int) volunteerTable.getValueAt(row, 0);
-                        approveVolunteer(volunteerId);
+                    if (col == 6) {
+                        String action = (String) volunteerTable.getValueAt(row, col);
+                        if ("Approve".equals(action)) {
+                            int volunteerId = (int) volunteerTable.getValueAt(row, 0);
+                            approveVolunteer(volunteerId);
+                        }
                     }
                 }
             });
 
+            volunteerTable.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
+                public Component getTableCellRendererComponent(JTable table, Object value,
+                        boolean isSelected, boolean hasFocus, int row, int column) {
+                    Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                    String status = (String) table.getValueAt(row, 5);
+                    if (status.contains("Approved")) {
+                        c.setBackground(new Color(210, 255, 210));
+                    } else {
+                        c.setBackground(Color.WHITE);
+                    }
+                    return c;
+                }
+            });
+
         } catch (SQLException e) {
-            messageLabel.setText("❌ DB Error loading volunteers: " + e.getMessage());
+            messageLabel.setText(" Error loading volunteers: " + e.getMessage());
         }
     }
 
-    // Approve volunteer by setting approved = TRUE
+    // APPROVE VOLUNTEER
     private void approveVolunteer(int volunteerId) {
         try {
             String sql = "UPDATE volunteers SET approved = TRUE WHERE volunteerId = ?";
@@ -166,18 +173,17 @@ public class Admin implements ActionListener {
             stmt.setInt(1, volunteerId);
             int rows = stmt.executeUpdate();
             if (rows > 0) {
-                messageLabel.setText("✅ Volunteer approved successfully!");
-                loadVolunteers(); // refresh table
+                JOptionPane.showMessageDialog(frame, "Volunteer approved successfully!");
+                loadVolunteers();
             }
         } catch (SQLException e) {
-            messageLabel.setText("❌ DB Error approving volunteer: " + e.getMessage());
+            JOptionPane.showMessageDialog(frame, " Error approving volunteer: " + e.getMessage());
         }
     }
 
-    // Load incidents dynamically
     private void loadIncidents() {
         try {
-            String sql = "SELECT place, details, phone FROM reports"; // updated table & columns
+            String sql = "SELECT place, details, phone FROM reports";
             PreparedStatement stmt = conn.prepareStatement(sql);
             ResultSet rs = stmt.executeQuery();
 
@@ -185,77 +191,93 @@ public class Admin implements ActionListener {
                     new String[] { "Place", "Details", "Phone" }, 0);
 
             while (rs.next()) {
-                String place = rs.getString("place");
-                String details = rs.getString("details");
-                String phone = rs.getString("phone");
-
-                model.addRow(new Object[] { place, details, phone });
+                model.addRow(new Object[] {
+                        rs.getString("place"),
+                        rs.getString("details"),
+                        rs.getString("phone")
+                });
             }
+
             incidentTable.setModel(model);
+            incidentTable.setRowHeight(30);
+            incidentTable.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+            incidentTable.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 16));
+            incidentTable.getTableHeader().setBackground(new Color(255, 180, 180));
+
+            incidentTable.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
+                public Component getTableCellRendererComponent(JTable table, Object value,
+                        boolean isSelected, boolean hasFocus, int row, int column) {
+                    Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                    if (row % 2 == 0)
+                        c.setBackground(new Color(255, 245, 245));
+                    else
+                        c.setBackground(new Color(255, 230, 230));
+                    return c;
+                }
+            });
+
         } catch (SQLException e) {
-            messageLabel.setText("❌ DB Error loading reports: " + e.getMessage());
+            messageLabel.setText(" Error loading incidents: " + e.getMessage());
         }
     }
 
-    // ------------------ ACTION EVENTS ------------------
     @Override
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == loginBtn) {
             loginAdmin(emailField.getText(), passwordField.getText());
-        } else if (e.getSource() == updateB3) {
-            String section = sectionField.getText();
-            String content = contentArea.getText();
-            if (!section.isEmpty() && !content.isEmpty()) {
-                try {
-                    String sql = "INSERT INTO first_aid (section, content) VALUES (?, ?)";
-                    PreparedStatement stmt = conn.prepareStatement(sql);
-                    stmt.setString(1, section);
-                    stmt.setString(2, content);
-                    stmt.executeUpdate();
-                    messageLabel.setText("✅ First aid updated for " + section);
-                } catch (SQLException ex) {
-                    messageLabel.setText("❌ DB Error: " + ex.getMessage());
-                }
-            } else {
-                messageLabel.setText("⚠️ Fill both fields!");
-            }
         }
     }
 
-    // ------------------ MAIN ------------------
+    // Main
     public static void main(String[] args) {
         Admin admin = new Admin();
 
-        frame = new JFrame("Admin Login");
+        frame = new JFrame("Thanal Admin Login");
         frame.setLayout(null);
-        frame.setSize(400, 300);
+        frame.setSize(600, 400);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.getContentPane().setBackground(new Color(230, 245, 255));
+
+        JLabel title = new JLabel("🌿 Thanal Admin Portal", SwingConstants.CENTER);
+        title.setFont(new Font("Segoe UI", Font.BOLD, 24));
+        title.setBounds(100, 30, 400, 40);
+        title.setForeground(new Color(0, 90, 150));
+        frame.add(title);
 
         JLabel emailLabel = new JLabel("Email:");
-        emailLabel.setBounds(50, 60, 100, 25);
+        emailLabel.setFont(new Font("Segoe UI", Font.PLAIN, 18));
+        emailLabel.setBounds(100, 100, 100, 25);
         frame.add(emailLabel);
 
         emailField = new JTextField();
-        emailField.setBounds(150, 60, 150, 25);
+        emailField.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+        emailField.setBounds(220, 100, 250, 30);
         frame.add(emailField);
 
         JLabel passLabel = new JLabel("Password:");
-        passLabel.setBounds(50, 100, 100, 25);
+        passLabel.setFont(new Font("Segoe UI", Font.PLAIN, 18));
+        passLabel.setBounds(100, 150, 100, 25);
         frame.add(passLabel);
 
         passwordField = new JTextField();
-        passwordField.setBounds(150, 100, 150, 25);
+        passwordField.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+        passwordField.setBounds(220, 150, 250, 30);
         frame.add(passwordField);
 
         loginBtn = new JButton("Login");
-        loginBtn.setBounds(150, 150, 100, 30);
+        loginBtn.setBounds(250, 220, 120, 40);
+        loginBtn.setBackground(new Color(0, 120, 215));
+        loginBtn.setForeground(Color.WHITE);
+        loginBtn.setFont(new Font("Segoe UI", Font.BOLD, 16));
         loginBtn.addActionListener(admin);
         frame.add(loginBtn);
 
-        messageLabel = new JLabel("");
-        messageLabel.setBounds(50, 200, 300, 25);
+        messageLabel = new JLabel("", SwingConstants.CENTER);
+        messageLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        messageLabel.setBounds(100, 280, 400, 25);
         frame.add(messageLabel);
 
+        frame.setLocationRelativeTo(null);
         frame.setVisible(true);
     }
 }
